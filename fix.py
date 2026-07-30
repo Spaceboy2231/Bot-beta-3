@@ -14,6 +14,23 @@ from datetime import datetime
 from datetime import datetime, timedelta
 from telethon.errors import FloodWaitError
 from PIL import Image, ImageDraw, ImageFont
+from flask import Flask
+import threading
+
+# === KEEP-ALIVE SERVER (prevents Render free tier from sleeping) ===
+keep_alive_app = Flask('')
+
+@keep_alive_app.route('/')
+def ping():
+    return 'pong'
+
+def run_keep_alive():
+    keep_alive_app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 10000)))
+
+def start_keep_alive():
+    t = threading.Thread(target=run_keep_alive, daemon=True)
+    t.start()
+    print("Keep-alive server running on port", os.environ.get('PORT', 10000))
 
 # Direct API endpoint (replaces checker_bridge)
 
@@ -4957,6 +4974,9 @@ async def start_fake_hits():
 # === STABLE MAIN BLOCK ===
 
 if __name__ == "__main__":
+    # Start keep-alive web server (prevents Render sleep)
+    start_keep_alive()
+    
     print("🔥 GOD MODE BOT ENGAGED — FLOODWATCH ACTIVE 🔥")
 
     retry_count = 0
